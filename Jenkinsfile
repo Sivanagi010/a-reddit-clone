@@ -8,11 +8,11 @@ pipeline {
         SCANNER_HOME = tool 'sonar-scanner'
         APP_NAME = "reddit-clone-pipeline"
         RELEASE = "1.0.0"
-        DOCKER_USER = "sivanagi"
+        DOCKER_USER = "ashfaque9x"
         DOCKER_PASS = 'dockerhub'
         IMAGE_NAME = "${DOCKER_USER}" + "/" + "${APP_NAME}"
         IMAGE_TAG = "${RELEASE}-${BUILD_NUMBER}"
-	
+	JENKINS_API_TOKEN = credentials("JENKINS_API_TOKEN")
     }
     stages {
         stage('clean workspace') {
@@ -22,7 +22,7 @@ pipeline {
         }
         stage('Checkout from Git') {
             steps {
-                git branch: 'main', url: 'https://github.com/Sivanagi010/a-reddit-clone.git'
+                git branch: 'main', url: 'https://github.com/Ashfaque-9x/a-reddit-clone.git'
             }
         }
         stage("Sonarqube Analysis") {
@@ -66,11 +66,11 @@ pipeline {
 	 stage("Trivy Image Scan") {
              steps {
                  script {
-	              sh ('docker run -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image sivanagi/reddit-clone-pipeline:latest --no-progress --scanners vuln  --exit-code 0 --severity HIGH,CRITICAL --format table > trivyimage.txt')
+	              sh ('docker run -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image ashfaque9x/reddit-clone-pipeline:latest --no-progress --scanners vuln  --exit-code 0 --severity HIGH,CRITICAL --format table > trivyimage.txt')
                  }
              }
          }
-	stage ('Cleanup Artifacts') {
+	 stage ('Cleanup Artifacts') {
              steps {
                  script {
                       sh "docker rmi ${IMAGE_NAME}:${IMAGE_TAG}"
@@ -78,9 +78,10 @@ pipeline {
                  }
              }
          }
-	post {
-          always {
-            emailext attachLog: true,
+	
+     post {
+        always {
+           emailext attachLog: true,
                subject: "'${currentBuild.result}'",
                body: "Project: ${env.JOB_NAME}<br/>" +
                    "Build Number: ${env.BUILD_NUMBER}<br/>" +
@@ -89,7 +90,5 @@ pipeline {
                attachmentsPattern: 'trivyfs.txt,trivyimage.txt'
         }
      }
-	
-	 
-} 
+    }  
 }
